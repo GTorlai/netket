@@ -25,6 +25,7 @@
 #include "graph_hamiltonian.hpp"
 #include "heisenberg.hpp"
 #include "ising.hpp"
+#include "ising_symm.hpp"
 #include "local_operator.hpp"
 
 #endif
