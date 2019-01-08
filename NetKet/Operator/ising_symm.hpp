@@ -20,6 +20,7 @@
 #include <complex>
 #include <iostream>
 #include <vector>
+#include <math.h>
 #include "Graph/graph.hpp"
 #include "Hilbert/abstract_hilbert.hpp"
 #include "Utils/random_utils.hpp"
@@ -41,7 +42,8 @@ class IsingSymm : public AbstractOperator {
   const int nspins_;
   double h_;
   double J_;
-
+  std::vector<std::vector<int> > symm_table_;
+  std::complex<double> I_;
   /**
     List of bonds for the interaction part.
   */
@@ -57,12 +59,14 @@ class IsingSymm : public AbstractOperator {
         graph_(hilbert.GetGraph()),
         nspins_(hilbert.Size()),
         h_(h),
-        J_(J) {
+        J_(J),
+        I_(0,1){
     Init();
   }
 
   void Init() {
     GenerateBonds();
+    symm_table_ = graph_.SymmetryTable();
     InfoMessage() << "Transverse-Field Ising model created " << std::endl;
     InfoMessage() << "h = " << h_ << std::endl;
     InfoMessage() << "J = " << J_ << std::endl;
@@ -104,8 +108,6 @@ class IsingSymm : public AbstractOperator {
   void FindConn(VectorConstRefType v, std::vector<std::complex<double>> &mel,
                 std::vector<std::vector<int>> &connectors,
                 std::vector<std::vector<double>> &newconfs) const override {
-    std::vector<std::vector<int> > symm_table;
-    symm_table = graph_.SymmetryTable();
     double normalization = nspins_;
     connectors.clear();
     connectors.resize(nspins_*nspins_ + 1);
@@ -120,13 +122,13 @@ class IsingSymm : public AbstractOperator {
     for (int i = 0; i < nspins_; i++) {
       for (int p = 0; p < nspins_; p++) {
         // spin flips
-        mel[nspins_*i+p + 1] = -h_/normalization;
-        connectors[nspins_*i+p+ 1].push_back(symm_table[p][i]);
-        newconfs[nspins_*i+p +1].push_back(-v(symm_table[p][i]));
+        mel[nspins_*i+p + 1] = -(h_/normalization);// * std::exp(-I_*std::complex<double>(0.5*M_PI*p));
+        connectors[nspins_*i+p+ 1].push_back(symm_table_[p][i]);
+        newconfs[nspins_*i+p +1].push_back(-v(symm_table_[p][i]));
 
         // interaction part
-        for (auto bond : bonds_[symm_table[p][i]]) {
-          mel[0] -= J_ * v(symm_table[p][i]) * v(bond) / normalization;
+        for (auto bond : bonds_[symm_table_[p][i]]) {
+          mel[0] -= J_ * v(symm_table_[p][i]) * v(bond) / normalization;// * std::exp(-I_*std::complex<double>(0.5*M_PI*p));
         }
       }
     }
