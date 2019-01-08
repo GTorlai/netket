@@ -24,7 +24,9 @@
 #include "bosonhubbard.hpp"
 #include "graph_operator.hpp"
 #include "heisenberg.hpp"
+#include "heisenberg_symm.hpp"
 #include "ising.hpp"
+#include "ising_symm.hpp"
 #include "local_operator.hpp"
 
 #endif
