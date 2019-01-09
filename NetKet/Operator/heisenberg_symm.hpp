@@ -45,7 +45,7 @@ class HeisenbergSymm : public AbstractOperator {
   using VectorRefType = AbstractOperator::VectorRefType;
   using VectorConstRefType = AbstractOperator::VectorConstRefType;
 
-  explicit HeisenbergSymm(const AbstractHilbert &hilbert, int k_momentum = 0.0)
+  explicit HeisenbergSymm(const AbstractHilbert &hilbert, double k_momentum = 0.0)
       : hilbert_(hilbert), graph_(hilbert.GetGraph()), nspins_(hilbert.Size()),
         k_momentum_(k_momentum),
         I_(0,1){
@@ -92,14 +92,15 @@ class HeisenbergSymm : public AbstractOperator {
     mel[0] = 0.;
     connectors[0].resize(0);
     newconfs[0].resize(0);
-
+    
     for (int i = 0; i < nspins_; i++) {
       for (int p = 0; p < nspins_; p++) {
         for (auto bond : bonds_[symm_table_[p][i]]) {
           // interaction part
           mel[0] += std::exp(-I_*std::complex<double>(k_momentum_*p))*v(symm_table_[p][i]) * v(bond) / normalization;
-
-          // spin flips
+          //std::cout<<k_momentum_<<"   "<<std::exp(-I_*std::complex<double>(k_momentum_*p))<<"   ";
+          //std::cout<<std::exp(-I_*std::complex<double>(k_momentum_*p))*v(symm_table_[p][i]) * v(bond) / normalization<<std::endl;
+          //// spin flips
           if (v(symm_table_[p][i]) != v(bond)) {
             connectors.push_back(std::vector<int>({symm_table_[p][i], bond}));
             newconfs.push_back(std::vector<double>({v(bond), v(symm_table_[p][i])}));
