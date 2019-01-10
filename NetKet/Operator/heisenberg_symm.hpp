@@ -73,14 +73,17 @@ class HeisenbergSymm : public AbstractOperator {
       for (auto s : adj[i]) {
         if (s > i) {
           bonds_[i].push_back(s);
+          std::cout<<"i = "<<i<<"bonds = "<<s<<std::endl;
         }
       }
+      std::cout<<std::endl;
     }
   }
 
   void FindConn(VectorConstRefType v, std::vector<std::complex<double>> &mel,
                 std::vector<std::vector<int>> &connectors,
                 std::vector<std::vector<double>> &newconfs) const override {
+    
     double normalization = nspins_;
     connectors.clear();
     connectors.resize(1);
@@ -92,24 +95,64 @@ class HeisenbergSymm : public AbstractOperator {
     mel[0] = 0.;
     connectors[0].resize(0);
     newconfs[0].resize(0);
-    
-    for (int i = 0; i < nspins_; i++) {
-      for (int p = 0; p < nspins_; p++) {
-        for (auto bond : bonds_[symm_table_[p][i]]) {
+    Eigen::VectorXd vp(nspins_);
+    for (int p = 0; p < nspins_; p++) {
+      for(int j=0;j<nspins_;j++){
+        vp(j) = v(symm_table_[p][j]);
+      }
+      std::cout<<vp.transpose()<<std::endl;
+      for (int i = 0; i < nspins_; i++) {
+        for (auto bond : bonds_[i]) {
           // interaction part
-          mel[0] += std::exp(-I_*std::complex<double>(k_momentum_*p))*v(symm_table_[p][i]) * v(bond) / normalization;
-          //std::cout<<k_momentum_<<"   "<<std::exp(-I_*std::complex<double>(k_momentum_*p))<<"   ";
-          //std::cout<<std::exp(-I_*std::complex<double>(k_momentum_*p))*v(symm_table_[p][i]) * v(bond) / normalization<<std::endl;
-          //// spin flips
-          if (v(symm_table_[p][i]) != v(bond)) {
-            connectors.push_back(std::vector<int>({symm_table_[p][i], bond}));
-            newconfs.push_back(std::vector<double>({v(bond), v(symm_table_[p][i])}));
-            mel.push_back(std::exp(-I_*std::complex<double>(k_momentum_*p))*offdiag_/normalization);
+          mel[0] += std::exp(-I_*std::complex<double>(k_momentum_*p)) * vp(bond) * vp(i) / double(normalization);
+          
+          // spin flips
+          if (vp(i) != vp(bond)) {
+            connectors.push_back(std::vector<int>({i, bond}));
+            newconfs.push_back(std::vector<double>({vp(bond), vp(i)}));
+            mel.push_back(std::exp(-I_*std::complex<double>(k_momentum_*p)) * offdiag_/ double(normalization));
           }
         }
       }
     }
+    std::cout<<std::endl;
   }
+
+
+//  void FindConn(VectorConstRefType v, std::vector<std::complex<double>> &mel,
+//                std::vector<std::vector<int>> &connectors,
+//                std::vector<std::vector<double>> &newconfs) const override {
+//    double normalization = nspins_;
+//    connectors.clear();
+//    connectors.resize(1);
+//    newconfs.clear();
+//    newconfs.resize(1);
+//    mel.resize(1);
+//
+//    // computing interaction part Sz*Sz
+//    mel[0] = 0.;
+//    connectors[0].resize(0);
+//    newconfs[0].resize(0);
+//    
+//    for (int i = 0; i < nspins_; i++) {
+//      for (int p = 0; p < nspins_; p++) {
+//        std::cout<<"hi = "<<i<<"  p = "<<p<<"  symm_tab = "<<symm_table_[p][i]<<std::endl;
+//        for (auto bond : bonds_[symm_table_[p][i]]) {
+//          // interaction part
+//          std::cout<<"  bond = "<<bond;
+//          mel[0] += std::exp(-I_*std::complex<double>(k_momentum_*p))*v(symm_table_[p][i]) * v(bond) / normalization;
+//          
+//          // spin flips
+//          if (v(symm_table_[p][i]) != v(bond)) {
+//            connectors.push_back(std::vector<int>({symm_table_[p][i], bond}));
+//            newconfs.push_back(std::vector<double>({v(bond), v(symm_table_[p][i])}));
+//            mel.push_back(std::exp(-I_*std::complex<double>(k_momentum_*p))*offdiag_/normalization);
+//          }
+//        }
+//        std::cout<<std::endl;
+//      }
+//    }
+//  }
 
   const AbstractHilbert &GetHilbert() const noexcept override {
     return hilbert_;
