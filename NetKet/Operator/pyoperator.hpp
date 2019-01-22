@@ -88,7 +88,7 @@ void AddOperatorModule(py::module &m) {
 
   py::class_<HeisenbergSymm, AbstractOperator>(subm, "HeisenbergSymm")
       .def(py::init<const AbstractHilbert &, double>(), py::keep_alive<1, 2>(),
-           py::arg("hilbert"), py::arg("k_momentum") = 0.0) ADDOPERATORMETHODS(HeisenbergSymm);
+           py::arg("hilbert"), py::arg("k_index") = 0.0) ADDOPERATORMETHODS(HeisenbergSymm);
 
   py::class_<GraphOperator, AbstractOperator>(subm, "GraphOperator")
       .def(py::init<const AbstractHilbert &, GraphOperator::OVecType,

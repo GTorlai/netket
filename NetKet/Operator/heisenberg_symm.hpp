@@ -45,10 +45,10 @@ class HeisenbergSymm : public AbstractOperator {
   using VectorRefType = AbstractOperator::VectorRefType;
   using VectorConstRefType = AbstractOperator::VectorConstRefType;
 
-  explicit HeisenbergSymm(const AbstractHilbert &hilbert, double k_momentum = 0.0)
+  explicit HeisenbergSymm(const AbstractHilbert &hilbert, double k_index = 0.0)
       : hilbert_(hilbert), graph_(hilbert.GetGraph()), nspins_(hilbert.Size()),
-        k_momentum_(k_momentum),
         I_(0,1){
+    k_momentum_ = 2*M_PI*k_index/double(nspins_);
     Init();
   }
 
@@ -73,10 +73,8 @@ class HeisenbergSymm : public AbstractOperator {
       for (auto s : adj[i]) {
         if (s > i) {
           bonds_[i].push_back(s);
-          //std::cout<<"i = "<<i<<"bonds = "<<s<<std::endl;
         }
       }
-      //std::cout<<std::endl;
     }
   }
 
