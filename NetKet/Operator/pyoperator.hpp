@@ -104,6 +104,11 @@ void AddOperatorModule(py::module &m) {
            py::keep_alive<1, 2>(), py::arg("hilbert"), py::arg("U"),
            py::arg("V") = 0., py::arg("mu") = 0.)
           ADDOPERATORMETHODS(BoseHubbard);
+  py::class_<SpinlessFermions, AbstractOperator>(subm, "SpinlessFermions")
+       .def(py::init<const AbstractHilbert &, double, double>(),
+            py::keep_alive<1, 2>(), py::arg("hilbert"), py::arg("V") = 0.,
+        py::arg("mu") = 0.)
+           ADDOPERATORMETHODS(SpinlessFermions);
 
   // Matrix wrappers
   py::class_<AbstractMatrixWrapper<>>(subm, "AbstractMatrixWrapper<>")

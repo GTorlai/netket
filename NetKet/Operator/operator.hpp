@@ -28,5 +28,6 @@
 #include "ising.hpp"
 #include "ising_symm.hpp"
 #include "local_operator.hpp"
+#include "spinlessfermions.hpp"
 
 #endif
