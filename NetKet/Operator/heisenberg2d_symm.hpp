@@ -112,7 +112,6 @@ class Heisenberg2dSymm : public AbstractOperator {
         double dot_product = k_momentum_[0]*x + k_momentum_[1]*y;
         phase_k = std::exp(-I_*std::complex<double>(dot_product))/double(normalization);
         //std::cout<<"r = ("<<x<<","<<y<<")  - k*r = "<<dot_product<< "  -  phase = " <<phase_k<<std::endl;
-    
         for(int j=0;j<nspins_;j++){
           vp(j) = v(symm_table_[symm_index][j]);
         }
@@ -123,7 +122,6 @@ class Heisenberg2dSymm : public AbstractOperator {
               mel[0] += phase_k * vp(bond) * vp(i);
             }
             else {
-              // spin flips
               conn_tmp.clear();
               newconf_tmp.clear();
               for(int j=0;j<nspins_;j++){

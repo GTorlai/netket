@@ -123,7 +123,7 @@ class Heisenberg1dSymm : public AbstractOperator {
           // interaction part
             mel[0] += std::exp(-I_*std::complex<double>(k_momentum_*p)) * vp(bond) * vp(i) / double(normalization);
           }
-          else {
+          //else {
             // spin flips
             conn_tmp.clear();
             newconf_tmp.clear();

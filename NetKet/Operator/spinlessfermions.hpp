@@ -30,58 +30,59 @@ namespace netket {
 
 // Heisenberg model on an arbitrary graph
 class SpinlessFermions : public AbstractOperator {
-   const AbstractHilbert &hilbert_;
-   const AbstractGraph &graph_;
+  const AbstractHilbert &hilbert_;
+  const AbstractGraph &graph_;
 
-   int nsites_;
+  int nsites_;
 
-   // cutoff in occupation number
-   int nmax_;
+  // cutoff in occupation number
+  int nmax_;
 
-   double V_;
+  double V_;
+  double t_;   
+  double mu_;
 
-   double mu_;
+  // list of bonds for the interaction part
+  std::vector<std::vector<int>> bonds_;
 
-   // list of bonds for the interaction part
-   std::vector<std::vector<int>> bonds_;
+public:
+  using VectorType = AbstractOperator::VectorType;
+  using VectorRefType = AbstractOperator::VectorRefType;
+  using VectorConstRefType = AbstractOperator::VectorConstRefType;
 
-  public:
-   using VectorType = AbstractOperator::VectorType;
-   using VectorRefType = AbstractOperator::VectorRefType;
-   using VectorConstRefType = AbstractOperator::VectorConstRefType;
+  explicit SpinlessFermions(const AbstractHilbert &hilbert, double t = 1.0,double V = 0.,
+                double mu = 0.)
+      : hilbert_(hilbert),
+        graph_(hilbert.GetGraph()),
+        nsites_(hilbert.Size()),
+        t_(t),
+        V_(V),
+        mu_(mu) {
+    nmax_ = hilbert_.LocalSize() - 1;
+    Init();
+  }
 
-   explicit SpinlessFermions(const AbstractHilbert &hilbert, double V = 0.,
-                 double mu = 0.)
-       : hilbert_(hilbert),
-         graph_(hilbert.GetGraph()),
-         nsites_(hilbert.Size()),
-         V_(V),
-         mu_(mu) {
-     nmax_ = hilbert_.LocalSize() - 1;
-     Init();
-   }
+  void Init() {
+    GenerateBonds();
+    InfoMessage() << "Spinless Fermion model created \n";
+    InfoMessage() << "V= " << V_ << std::endl;
+    InfoMessage() << "mu= " << mu_ << std::endl;
+    InfoMessage() << "Nmax= " << nmax_ << std::endl;
+  }
 
-   void Init() {
-     GenerateBonds();
-     InfoMessage() << "Spinless Fermion model created \n";
-     InfoMessage() << "V= " << V_ << std::endl;
-     InfoMessage() << "mu= " << mu_ << std::endl;
-     InfoMessage() << "Nmax= " << nmax_ << std::endl;
-   }
+  void GenerateBonds() {
+    auto adj = graph_.AdjacencyList();
 
-   void GenerateBonds() {
-     auto adj = graph_.AdjacencyList();
+    bonds_.resize(nsites_);
 
-     bonds_.resize(nsites_);
-
-     for (int i = 0; i < nsites_; i++) {
-       for (auto s : adj[i]) {
-         if (s > i) {
-           bonds_[i].push_back(s);
-         }
-       }
-     }
-   }
+    for (int i = 0; i < nsites_; i++) {
+      for (auto s : adj[i]) {
+        if (s > i) {
+          bonds_[i].push_back(s);
+        }
+      }
+    }
+  }
    void FindConn(VectorConstRefType v, std::vector<std::complex<double>> 
 &mel,
                  std::vector<std::vector<int>> &connectors,
@@ -105,18 +106,18 @@ override {
          // nn interaction
          mel[0] += V_ * 0.25*(1.0+v(i)) * (1.0+v(bond));
 
-     // Fermi sign
-     int s1 = std::min(i, bond);
-     int s2 = std::max(i, bond);
-     double fermisign = 1.;
-     for (int k = s1+1; k < s2; ++k)
+      // Fermi sign
+      int s1 = std::min(i, bond);
+      int s2 = std::max(i, bond);
+      double fermisign = 1.;
+      for (int k = s1+1; k < s2; ++k)
        if (v(k)==1) fermisign *= -1.;
 
          // hopping
          if (v(i)!=v(bond)) {
            connectors.push_back(std::vector<int>({i, bond}));
            newconfs.push_back(std::vector<double>({v(bond),v(i)}));
-           mel.push_back(-fermisign);
+           mel.push_back(-fermisign * t_);
          }
        }
      }
