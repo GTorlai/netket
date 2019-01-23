@@ -86,9 +86,13 @@ void AddOperatorModule(py::module &m) {
       .def(py::init<const AbstractHilbert &>(), py::keep_alive<1, 2>(),
            py::arg("hilbert")) ADDOPERATORMETHODS(Heisenberg);
 
-  py::class_<HeisenbergSymm, AbstractOperator>(subm, "HeisenbergSymm")
+  py::class_<Heisenberg1dSymm, AbstractOperator>(subm, "Heisenberg1dSymm")
       .def(py::init<const AbstractHilbert &, double>(), py::keep_alive<1, 2>(),
-           py::arg("hilbert"), py::arg("k_index") = 0.0) ADDOPERATORMETHODS(HeisenbergSymm);
+           py::arg("hilbert"), py::arg("k_index") = 0.0) ADDOPERATORMETHODS(Heisenberg1dSymm);
+
+  py::class_<Heisenberg2dSymm, AbstractOperator>(subm, "Heisenberg2dSymm")
+      .def(py::init<const AbstractHilbert &, std::vector<int>>(), py::keep_alive<1, 2>(),
+           py::arg("hilbert"), py::arg("k_index") = std::vector<int>()) ADDOPERATORMETHODS(Heisenberg2dSymm);
 
   py::class_<GraphOperator, AbstractOperator>(subm, "GraphOperator")
       .def(py::init<const AbstractHilbert &, GraphOperator::OVecType,
@@ -104,11 +108,18 @@ void AddOperatorModule(py::module &m) {
            py::keep_alive<1, 2>(), py::arg("hilbert"), py::arg("U"),
            py::arg("V") = 0., py::arg("mu") = 0.)
           ADDOPERATORMETHODS(BoseHubbard);
+  
   py::class_<SpinlessFermions, AbstractOperator>(subm, "SpinlessFermions")
        .def(py::init<const AbstractHilbert &, double, double>(),
             py::keep_alive<1, 2>(), py::arg("hilbert"), py::arg("V") = 0.,
         py::arg("mu") = 0.)
            ADDOPERATORMETHODS(SpinlessFermions);
+
+  py::class_<SpinlessFermionsSymm, AbstractOperator>(subm, "SpinlessFermionsSymm")
+       .def(py::init<const AbstractHilbert &, std::vector<int>,double, double>(),
+            py::keep_alive<1, 2>(), py::arg("hilbert"),py::arg("k_index") = std::vector<int>(),
+            py::arg("V") = 0.,py::arg("mu") = 0.)
+           ADDOPERATORMETHODS(SpinlessFermionsSymm);
 
   // Matrix wrappers
   py::class_<AbstractMatrixWrapper<>>(subm, "AbstractMatrixWrapper<>")

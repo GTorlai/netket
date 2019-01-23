@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NETKET_HEISENBERGSYMM_HPP
-#define NETKET_HEISENBERGSYMM_HPP
+#ifndef NETKET_HEISENBERG1DSYMM_HPP
+#define NETKET_HEISENBERG1DSYMM_HPP
 
 #include <mpi.h>
 #include <Eigen/Dense>
@@ -27,7 +27,7 @@ namespace netket {
 
 // Heisenberg model on an arbitrary graph
 
-class HeisenbergSymm : public AbstractOperator {
+class Heisenberg1dSymm : public AbstractOperator {
   const AbstractHilbert &hilbert_;
   const AbstractGraph &graph_;
 
@@ -45,7 +45,7 @@ class HeisenbergSymm : public AbstractOperator {
   using VectorRefType = AbstractOperator::VectorRefType;
   using VectorConstRefType = AbstractOperator::VectorConstRefType;
 
-  explicit HeisenbergSymm(const AbstractHilbert &hilbert, double k_index = 0.0)
+  explicit Heisenberg1dSymm(const AbstractHilbert &hilbert, double k_index = 0.0)
       : hilbert_(hilbert), graph_(hilbert.GetGraph()), nspins_(hilbert.Size()),
         I_(0,1){
     k_momentum_ = 2*M_PI*k_index/double(nspins_);

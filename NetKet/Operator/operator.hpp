@@ -24,10 +24,12 @@
 #include "bosonhubbard.hpp"
 #include "graph_operator.hpp"
 #include "heisenberg.hpp"
-#include "heisenberg_symm.hpp"
+#include "heisenberg1d_symm.hpp"
+#include "heisenberg2d_symm.hpp"
 #include "ising.hpp"
 #include "ising_symm.hpp"
 #include "local_operator.hpp"
 #include "spinlessfermions.hpp"
+#include "spinlessfermions_symm.hpp"
 
 #endif
