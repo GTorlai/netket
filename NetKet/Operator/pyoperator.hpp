@@ -224,7 +224,6 @@ void AddOperatorModule(py::module &m) {
 
   py::class_<GraphOperator, AbstractOperator>(
       subm, "GraphOperator", R"EOF(A custom graph based operator.)EOF")
-  py::class_<GraphOperator, AbstractOperator>(subm, "GraphOperator")
       .def(py::init<const AbstractHilbert &, GraphOperator::OVecType,
                     GraphOperator::OVecType, std::vector<int>>(),
            py::keep_alive<1, 2>(), py::arg("hilbert"),
