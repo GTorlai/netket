@@ -25,11 +25,14 @@
 #include "graph_operator.hpp"
 #include "heisenberg.hpp"
 #include "heisenberg1d_symm.hpp"
+#include "spin_translation_projector.hpp" 
 #include "heisenberg2d_symm.hpp"
 #include "ising.hpp"
 #include "ising_symm.hpp"
 #include "local_operator.hpp"
 #include "spinlessfermions.hpp"
 #include "spinlessfermions_symm.hpp"
+#include "fermion_translation_projector.hpp"
+#include "spinlessfermions_symm_projector.hpp"
 
 #endif

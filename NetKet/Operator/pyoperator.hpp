@@ -121,6 +121,24 @@ void AddOperatorModule(py::module &m) {
             py::arg("t") = 1.0,py::arg("V") = 0.,py::arg("mu") = 0.)
            ADDOPERATORMETHODS(SpinlessFermionsSymm);
 
+  py::class_<SpinlessFermionsSymmProjector, AbstractOperator>(subm, "SpinlessFermionsSymmProjector")
+       .def(py::init<const AbstractHilbert &, std::vector<int>,double,double, double,double>(),
+            py::keep_alive<1, 2>(), py::arg("hilbert"),py::arg("k_index") = std::vector<int>(),
+            py::arg("t") = 1.0,py::arg("V") = 0.,py::arg("mu") = 0.,py::arg("alpha")=0.1)
+           ADDOPERATORMETHODS(SpinlessFermionsSymmProjector);
+
+  py::class_<FermionsTranslationProjector, AbstractOperator>(subm, "FermionsTranslationProjector")
+       .def(py::init<const AbstractHilbert &, std::vector<int>,double>(),
+            py::keep_alive<1, 2>(), py::arg("hilbert"),py::arg("k_index") = std::vector<int>(),
+            py::arg("alpha")=-1.)
+           ADDOPERATORMETHODS(FermionsTranslationProjector);
+
+  py::class_<SpinTranslationProjector, AbstractOperator>(subm, "SpinTranslationProjector")
+       .def(py::init<const AbstractHilbert &, int,double>(),
+            py::keep_alive<1, 2>(), py::arg("hilbert"),py::arg("k_index") = 0,
+            py::arg("alpha")=-1.)
+           ADDOPERATORMETHODS(SpinTranslationProjector);
+
   // Matrix wrappers
   py::class_<AbstractMatrixWrapper<>>(subm, "AbstractMatrixWrapper<>")
       .def("apply", &AbstractMatrixWrapper<>::Apply, py::arg("state"))
