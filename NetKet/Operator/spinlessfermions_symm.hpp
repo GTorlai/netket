@@ -60,11 +60,12 @@ public:
         nsites_(hilbert.Size()),
         t_(t),
         V_(V),
-        mu_(mu) {
+        mu_(mu),
+        I_(0,1){
     L_ = int(std::sqrt(nsites_));
     nmax_ = hilbert_.LocalSize() - 1;
     for (int i=0;i<k_index.size();i++){
-      k_momentum_.push_back(2*M_PI*k_index[i]/double(nsites_));
+      k_momentum_.push_back(2*M_PI*k_index[i]/double(L_));
     }
     Init();
   }
@@ -72,19 +73,19 @@ public:
   void Init() {
     GenerateBonds();
     symm_table_ = graph_.SymmetryTable();
-    for (int i=0;i<symm_table_.size();i++){
-      std::cout<<"i = " << i << " :  ";
-      for(int j=0;j<symm_table_[i].size();j++){
-        std::cout<<symm_table_[i][j]<<" ";
-      }
-      std::cout<<std::endl;
-    }
-    std::cout<<"\n\n";
+    //for (int i=0;i<symm_table_.size();i++){
+    //  std::cout<<"i = " << i << " :  ";
+    //  for(int j=0;j<symm_table_[i].size();j++){
+    //    std::cout<<symm_table_[i][j]<<" ";
+    //  }
+    //  std::cout<<std::endl;
+    //}
+    //std::cout<<"\n\n";
 
-    InfoMessage() << "Spinless Fermion model created \n";
-    InfoMessage() << "V= " << V_ << std::endl;
-    InfoMessage() << "mu= " << mu_ << std::endl;
-    InfoMessage() << "Nmax= " << nmax_ << std::endl;
+    //InfoMessage() << "Spinless Fermion model created \n";
+    //InfoMessage() << "V= " << V_ << std::endl;
+    //InfoMessage() << "mu= " << mu_ << std::endl;
+    //InfoMessage() << "Nmax= " << nmax_ << std::endl;
   }
 
   void GenerateBonds() {
@@ -127,32 +128,49 @@ override {
     Eigen::VectorXd vp(nsites_);
     Eigen::VectorXd voff(nsites_);
     Eigen::VectorXd vcheck(nsites_);
-
-    //std::cout<<"State = " << v.transpose()<<"\n\n";
-
+    //vcheck << -1,-1,-1,-1,-1,-1,1,-1,1;
+    //if(v==vcheck){
+    //  std::cout<<"State = ";
+    //  for (int i=0;i<nsites_;i++){
+    //    std::cout<<int(0.5*(v(i)+1));
+    //  }
+    //  std::cout<<"\n\n";
+    //}
     for(int y=0;y<L_;y++){
       for(int x=0;x<L_;x++){
+            
+        // PERFORM THE TRANSLATION
         symm_index = y*L_+x;
-        
         double dot_product = k_momentum_[0]*x + k_momentum_[1]*y;
         phase_k = std::exp(-I_*std::complex<double>(dot_product))/double(normalization);
-
+        //std::cout<<"x = "<<x<<"  y = "<<y<<"  k*r = " << dot_product;
+        //std::cout<<" phase = "<<phase_k<<std::endl; 
         for(int j=0;j<nsites_;j++){
           vp(j) = v(symm_table_[symm_index][j]);
         }
-
+        
+        //if(v==vcheck){
+        //  std::cout<<"Translation " << symm_index <<" : ";
+        //  for(int j=0;j<symm_table_[symm_index].size();j++){
+        //    std::cout<<symm_table_[symm_index][j]<<" ";
+        //  }
+        //}
+        
+        // COMPUTE THE PERMUTATION SIGN
         std::vector<int> sort(nsites_);
         int sum=0;
         int nf, k;
-        //std::cout<<" c = ";
         for(nf=0, k=0; k < nsites_; ++k){
-          if (int(v(k)) == 1){
+          if (int(vp(k)) == 1){
             sort[nf] = symm_table_[symm_index][k];
             ++nf;
           }
         }
-        //for(int i=0; i<nf; i++){
-        //  std::cout<<sort[i]<<" ";
+        //if(v==vcheck){
+        //  std::cout<<" c = ";
+        //  for(int i=0; i<nf; i++){
+        //    std::cout<<sort[i]<<" ";
+        //  }
         //}
         bool to_do=true;
         int old_sum;
@@ -171,67 +189,88 @@ override {
             // to_do=(sum-old_sum ? true: false);
           }
         permutation_sign = double(sum % 2 ? -1 : 1);
-        //std::cout<<"  Sorted = ";
-        //for(int i=0; i<nf; i++){
-        //  std::cout<<sort[i]<<" ";
-        //}
-        //std::cout<<"  # perm = " << sum << "  Sign = " << permutation_sign; 
-        //std::cout<<"\n";
-     
-        // HAMILTONIAN LOOP
+        //if(v==vcheck){
+        //  std::cout<<"  Sorted = ";
+        //  for(int i=0; i<nf; i++){
+        //    std::cout<<sort[i]<<" ";
+        //  }
+        //  //std::cout<<"  # perm = " << sum;
+        //  std::cout<<"  Sign = " << permutation_sign; 
+        //  //std::cout<<"\n";
+        //} 
+        // DIAGONAL HAMILTONIAN POTENTIAL
+        std::complex<double> energy_term;
+        phase = phase_k * permutation_sign;//std::complex<double>(permutation_sign);
+        energy_term = 0.0;
+
+        for (int i = 0; i < nsites_; i++) {
+          energy_term += - phase * mu_ * 0.5*(1.0+vp(i));
+          for (auto bond : bonds_[i]) {
+            energy_term += phase * V_ * 0.25*(1.0+vp(i)) * (1.0+vp(bond));
+          }
+        }
+        if(vp==v){
+          mel[0] += energy_term;
+          //if(v==vcheck){
+          //  std::cout<<"  Diag = " << energy_term.real()<<std::endl; 
+          //}
+        }
+        else{
+          conn_tmp.clear();
+          newconf_tmp.clear();
+          for(int j=0;j<nsites_;j++){
+            if (vp(j) != v(j)){
+              conn_tmp.push_back(j);
+              newconf_tmp.push_back(vp(j));
+            }//if
+          }//for
+          connectors.push_back(conn_tmp);
+          newconfs.push_back(newconf_tmp);
+          mel.push_back(energy_term);
+          //if(v==vcheck){
+          //  std::cout<<"  Off-diag ( ";
+          //  for(int s=0;s<nsites_;s++){
+          //    std::cout<<int(0.5*(vp(s)+1));
+          //  }
+          //  std::cout<<") = "<<energy_term.real()<<std::endl;
+          //}
+        }
+
+        // KINETIC ENERGY'
         for (int i = 0; i < nsites_; i++) {
           for (auto bond : bonds_[i]) {
-            phase = phase_k * std::complex<double>(permutation_sign);
-            if(vp==v){
-              mel[0] += phase * V_ * 0.25*(1.0+vp(i)) * (1.0+vp(bond));
-              mel[0] -= phase * mu_ * 0.5*(1.0+vp(i)) / double(bonds_[i].size());
+            voff = vp;
+            conn_tmp.clear();
+            newconf_tmp.clear();
+            
+            // Jordan Wigner string
+            int s1 = std::min(i, bond);
+            int s2 = std::max(i, bond);
+            fermi_sign = 1.;
+            for (int k = s1+1; k < s2; ++k){
+              if (vp(k)==1) fermi_sign *= -1.;
+            }//for
+            
+            phase = phase_k * fermi_sign * permutation_sign;//std::complex<double>(fermi_sign * permutation_sign);
+            if (vp(i) != vp(bond)) {
+              double tmp = voff(i);
+              voff(i) = voff(bond);
+              voff(bond) = tmp;
+              if (voff == v){
+                mel[0] += -phase * t_;
+              }
+              else{
+                for(int j=0;j<nsites_;j++){
+                  if (voff(j) != v(j)){
+                    conn_tmp.push_back(j);
+                    newconf_tmp.push_back(voff(j));
+                  }//if
+                }//for
+                connectors.push_back(conn_tmp);
+                newconfs.push_back(newconf_tmp);
+                mel.push_back(-phase * t_);
+              }//else
             }//if
-            //else{
-            //  conn_tmp.clear();
-            //  newconf_tmp.clear();
-            //  for(int j=0;j<nsites_;j++){
-            //    if (vp(j) != v(j)){
-            //      conn_tmp.push_back(j);
-            //      newconf_tmp.push_back(vp(j));
-            //    }//if
-            //  }//for
-            //  connectors.push_back(conn_tmp);
-            //  newconfs.push_back(newconf_tmp);
-            //  phase = phase_k * std::complex<double>(permutation_sign);
-            //  mel.push_back(phase * V_ * 0.25*(1.0+vp(i)) * (1.0+vp(bond)));
-            //  //std::complex<double> tmp = phase * std::complex<double>(V_ * 0.25*(1.0+vp(i)) * (1.0+vp(bond)));
-            //  //tmp -=phase * std::complex<double>(mu_ * 0.5*(1.0+vp(i)) / double(bonds_[i].size()));
-            //  //mel.push_back(tmp);
-            //}
-            
-            
-            ////Off diagonal
-            //voff = vp;
-            //conn_tmp.clear();
-            //newconf_tmp.clear();
-            //// Fermi sign
-            //int s1 = std::min(i, bond);
-            //int s2 = std::max(i, bond);
-            //fermi_sign = 1.;
-            //for (int k = s1+1; k < s2; ++k){
-            //  if (vp(k)==1) fermi_sign *= -1.;
-            //}//for
-            //
-            //phase = phase_k * std::complex<double>(fermi_sign * permutation_sign);
-            //if (vp(i) != vp(bond)) {
-            //  double tmp = voff(i);
-            //  voff(i) = voff(bond);
-            //  voff(bond) = tmp;
-            //  for(int j=0;j<nsites_;j++){
-            //    if (voff(j) != v(j)){
-            //      conn_tmp.push_back(j);
-            //      newconf_tmp.push_back(voff(j));
-            //    }//if
-            //  }//for
-            //  connectors.push_back(conn_tmp);
-            //  newconfs.push_back(newconf_tmp);
-            //  mel.push_back(-phase * t_);
-            //}//if
           }//for (bond)
         }//for (sites)
       }//x
